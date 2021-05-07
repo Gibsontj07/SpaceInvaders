@@ -1,0 +1,12 @@
+#+TITLE: TFT LCD
+# showall | overview | content:
+#+STARTUP: showall
+
+
+
+* Debugging bright stripe background
+** Setup
+*** Hardware selected mode: 8080 MCU 8-bit 
+
+
+
