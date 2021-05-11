@@ -1,4 +1,4 @@
-/*  Author: Steve Gunn
+/* Author: Steve Gunn modified by Thomas Gibson
  * Licence: This work is licensed under the Creative Commons Attribution License.
  *           View this license at http://creativecommons.org/about/licenses/
  *
@@ -247,6 +247,11 @@ void display_string_xy(char *str, uint16_t x, uint16_t y)
         display_char(str[i]);
 }
 
+//All code from this point onwards is by Thomas Gibson
+
+//Displays a single space invader at the specified x, y coordinate in the specified colour.
+//Invaders are drawn by writing to the display memory directly because this produced better
+//results than displaying a series of small rectangles using the above functions.
 void display_invader(uint16_t x, uint16_t y, uint16_t col)
 {
 	write_cmd(COLUMN_ADDRESS_SET);
@@ -643,7 +648,7 @@ void display_invader(uint16_t x, uint16_t y, uint16_t col)
 
 }
 
-
+//Draws the projectile thrown by the space invaders at the given coordinate in the given colour.
 void display_zap(uint16_t x, uint16_t y, uint16_t col)
 {
 	write_cmd(COLUMN_ADDRESS_SET);

@@ -1,4 +1,4 @@
-/*  Author: Steve Gunn
+/* Author: Thomas Gibson (Based on Pong by Steve Gunn)
  * Licence: This work is licensed under the Creative Commons Attribution License.
  *           View this license at http://creativecommons.org/about/licenses/
  */
@@ -48,9 +48,11 @@ volatile int zapSequenceVal = 0;
 
 ISR(INT6_vect)
 {
+	//draw ship.
 	fill_rectangle(last_ship, display.background);
 	fill_rectangle(ship, GREEN);
 
+	//draw invaders.
 	int i;
 	for (i = 0; i < NO_OF_INVADERS; i++) {
 		display_invader(invadersPrevCoords[i].x, invadersPrevCoords[i].y, display.background);
@@ -64,6 +66,7 @@ ISR(INT6_vect)
 		invadersPrevCoords[i].y = invadersCoords[i].y;
 	}
 
+	//draw lazer and zap.
 	fill_rectangle(last_lazer, display.background);
 	fill_rectangle(lazer, GREEN);
 	display_zap(last_zap.x, last_zap.y, display.background);
@@ -72,15 +75,20 @@ ISR(INT6_vect)
 		display_zap(zap.x, zap.y, WHITE);
 	}
 	
+	//update previous positions before objects are moved again.
 	last_lazer = lazer;
 	last_ship = ship;
 	last_zap.x = zap.x;
 	last_zap.y = zap.y;
+
+	//Display lives left and score.
 	char buffer[4];
 	sprintf(buffer, "%03d", lives);
 	display_string_xy(buffer, 280, 20);
 	sprintf(buffer, "%03d", score);
 	display_string_xy(buffer, 25, 20);
+
+	//Increase timer values
 	move++;
 	zap_timer++;
 	fps++;
@@ -88,18 +96,22 @@ ISR(INT6_vect)
 
 ISR(TIMER1_COMPA_vect)
 {
+	//Move lazer if it's been fired.
 	static int8_t xinc = 2;
 	if (lazer_fired == 1) {
 		lazer.top   -= xinc;
 		lazer.bottom  -= xinc;
 	}
+	//Move lazer on centre button press
 	if(!(PINE & _BV(SWC))){
 		lazer_fired = 1;
 	}
+	//If the lazer goes past the top of the display move it back to a starting position.
 	if (lazer.top > display.height) {
 		lazer_fired = 0;
 		lazer = start_lazer;
 	}
+	//Move the ship left when the rotary encoder is used.
 	if (rotary>0 && ship.left >= SHIP_INC) {
 		ship.left  -= SHIP_INC;
 		ship.right -= SHIP_INC;
@@ -110,6 +122,7 @@ ISR(TIMER1_COMPA_vect)
 			lazer.right -= SHIP_INC;	
 		}
 	}
+	//Move the ship right when the rotary encoder is used.
 	if (rotary<0 && ship.right < display.width-SHIP_INC) {
 		ship.left  += SHIP_INC;
 		ship.right += SHIP_INC;
@@ -121,6 +134,8 @@ ISR(TIMER1_COMPA_vect)
 		}
 	}
 	rotary = 0;
+
+	//Check to see if the lazer hit any invaders
 	int i;
 	for (i = 0; i < NO_OF_INVADERS; i++) {
 		if (lazer.left > (invadersCoords[i].x - 2) && 
@@ -136,6 +151,7 @@ ISR(TIMER1_COMPA_vect)
 		}
 	}
 
+	//If the space invaders reach the end of the display make them move the other way.
 	if (invadersCoords[NO_OF_INVADERS - 1].x > display.width - 45) {
 		squadDist = -20;
 	}
@@ -144,6 +160,7 @@ ISR(TIMER1_COMPA_vect)
 		squadDist = 20;
 	}
 
+	//Change the position of all the space invaders
 	if (move >= 75) {
 		move = 0;
 		for (i = 0; i < NO_OF_INVADERS; i++) {
@@ -151,6 +168,7 @@ ISR(TIMER1_COMPA_vect)
 		}
 	}
 
+	//Trigger invaders to launch projectiles
 	if (zap_timer >= 100) {
 		zap_timer = 0;
 		zap_fired = 1;
@@ -172,12 +190,14 @@ ISR(TIMER1_COMPA_vect)
 		zap.y += 2;
 	}
 
+ 	//If zap reaches top of display, make it disappear.
 	if (zap.y + 15 > display.height) {
 		zap_fired = 0;
 		zap.x = 0;
 		zap.y = 0;
 	}
 
+	//If an invaders projectile makes contact with the ship subtract one life.
 	if (zap.x < ship.right && zap.x + 3 > ship.left && zap.y + 14 > LCDWIDTH-SHIP_HEIGHT) {
 		lives--;
 		zap_fired = 0;
@@ -185,6 +205,7 @@ ISR(TIMER1_COMPA_vect)
 		zap.y = 0;
 	}
 
+	//If the lazer and invader projectile make contact they should both disappear and be reset.
 	if (lazer_fired == 1 && lazer.top > zap.y - 3 && lazer.bottom < zap.y + 15 && lazer.left > zap.x-3 && lazer.right < zap.x + 8) {
 		zap_fired = 0;
 		zap.x = 0;
